@@ -70,6 +70,14 @@ which see."
           (function :tag "Custom")
           (const :tag "Disable terminal support" nil)))
 
+(defsubst xdg-launcher--managed-by-systemd ()
+  "Return t when the current Emacs instance is managed by systemd."
+  (equal (getenv-internal "SYSTEMD_EXEC_PID" initial-environment)
+         (number-to-string (emacs-pid))))
+
+(defcustom xdg-launcher-use-systemd (xdg-launcher--managed-by-systemd)
+  "When non-nil, systemd-run is used to launch and manage applications."
+  :type 'boolean)
 
 (defcustom xdg-launcher-icon-themes '("hicolor")
   "Icon themes to use for app icons in priority order."
@@ -251,7 +259,19 @@ The return-value is cached and should not be modified by the caller."
                 (user-error "Cannot launch %s: terminal support is disabled" .name))
               (pop-to-buffer
                (apply xdg-launcher-terminal-function .name cmd nil args)))
-          (apply #'call-process cmd nil 0 nil args))))))
+          (if xdg-launcher-use-systemd
+              (apply #'call-process
+                     "systemd-run" nil nil nil
+                     "--same-dir" "--user"
+                     "--expand-environment=no"
+                     "--property=PartOf=graphical-session.target"
+                     (format "--unit=app-%s@%d.service"
+                             (file-name-base .file)
+                             (random 65536))
+                     "--setenv=INSIDE_EMACS" "--setenv=INSIDE_EXWM"
+                     "--"
+                     cmd args)
+            (apply #'call-process cmd nil 0 nil args)))))))
 
 (defun xdg-launcher--affixate (align candidate)
   "Return the annotated CANDIDATE with the description aligned to ALIGN."
