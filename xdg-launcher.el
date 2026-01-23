@@ -264,6 +264,7 @@ The return-value is cached and should not be modified by the caller."
                      "systemd-run" nil nil nil
                      "--same-dir" "--user"
                      "--expand-environment=no"
+                     "--property=ExitType=cgroup"
                      "--property=PartOf=graphical-session.target"
                      (format "--unit=app-%s@%d.service"
                              (file-name-base .file)
