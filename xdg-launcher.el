@@ -251,6 +251,7 @@ The return-value is cached and should not be modified by the caller."
   (let-alist selected
     (let ((cmd (car .exec))
           (args (cdr .exec))
+          (id (file-name-base .file))
           (default-directory (or .path default-directory)))
       (with-existing-directory
         (if .terminal
@@ -263,12 +264,11 @@ The return-value is cached and should not be modified by the caller."
               (apply #'call-process
                      "systemd-run" nil nil nil
                      "--same-dir" "--user"
+                     (concat "--description=" (or .comment (format "XDG Application: %s" id)))
                      "--expand-environment=no"
                      "--property=ExitType=cgroup"
                      "--property=PartOf=graphical-session.target"
-                     (format "--unit=app-%s@%d.service"
-                             (file-name-base .file)
-                             (random 65536))
+                     (format "--unit=app-%s@%d.service" id (random 65536))
                      "--setenv=INSIDE_EMACS"
                      "--setenv=INSIDE_EXWM"
                      "--setenv=DISPLAY"
