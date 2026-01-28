@@ -269,7 +269,11 @@ The return-value is cached and should not be modified by the caller."
                      (format "--unit=app-%s@%d.service"
                              (file-name-base .file)
                              (random 65536))
-                     "--setenv=INSIDE_EMACS" "--setenv=INSIDE_EXWM"
+                     "--setenv=INSIDE_EMACS"
+                     "--setenv=INSIDE_EXWM"
+                     "--setenv=DISPLAY"
+                     "--setenv=XDG_CURRENT_DESKTOP"
+                     "--setenv=XDG_SESSION_ID"
                      "--"
                      cmd args)
             (apply #'call-process cmd nil 0 nil args)))))))
