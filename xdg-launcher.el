@@ -319,6 +319,16 @@ files."
                   t nil 'xdg-launcher nil nil)))
     (funcall xdg-launcher-action-function (gethash result candidates))))
 
+;;;###autoload
+(defun xdg-launcher-list-visible-apps ()
+  "Return an alist of all visible Linux applications.
+
+The return value is an alist equivalent to the hash table returned
+from `xdg-launcher-parse-files', which see."
+  (map-filter (lambda (_k v) (alist-get 'visible v))
+              (xdg-launcher-list-apps)))
+
+;;;###autoload
 (defconst xdg-launcher-consult-source
   `( :name          "Application"
      :narrow        ?a
@@ -326,7 +336,7 @@ files."
      :require-match t
      :action        ,(lambda (cand) (funcall xdg-launcher-action-function cand))
      :annotate      ,(lambda (cand) (nth 2 (xdg-launcher--affixate 0 cand)))
-     :items         ,(lambda () (map-filter (lambda (_k v) (alist-get 'visible v)) (xdg-launcher-list-apps))))
+     :items         xdg-launcher-list-visible-apps)
   "Application source for `consult-buffer'.")
 
 ;;;###autoload
