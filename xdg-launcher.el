@@ -246,6 +246,28 @@ The return-value is cached and should not be modified by the caller."
             xdg-launcher--cached-files new-files)))
   xdg-launcher--cache)
 
+(defun xdg-launcher-action-function-uwsm (selected)
+  "Function used to run the SELECTED application using UWSM."
+  (let-alist selected
+    (let ((cmd (car .exec))
+          (args (cdr .exec))
+          (id (file-name-base .file))
+          (default-directory (or .path default-directory)))
+      (with-existing-directory
+        (make-process
+         :name (concat "uwsm-" id)
+         :command (seq-filter
+                   #'identity
+                   `("uwsm"
+                     "app"
+                     "-t" "service"
+                     "-a" ,id
+                     "-d" ,(or .comment (format "XDG Application: %s" id))
+                     ,(when .terminal "-T")
+                     "--"
+                     ,cmd ,@args)))))))
+
+
 (defun xdg-launcher-action-function-default (selected)
   "Default function used to run the SELECTED application."
   (let-alist selected
