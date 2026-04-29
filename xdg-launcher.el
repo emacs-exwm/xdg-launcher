@@ -235,15 +235,17 @@ extension) to alists of:
                      (xdg-launcher--is-installed try-exec))
             (puthash
              name
-             `((name . ,name) (comment . ,comment)
-               (path . ,path) (file . ,file)
+             `((name . ,name)
+               ,@(when comment `((comment . ,comment)))
+               ,@(when path `((path . ,path)))
+               (file . ,file)
                (exec . ,(xdg-launcher--parse-exec exec name icon file))
                (icon . ,(and iconpath icon
                              (xdg-launcher--get-icon iconpath icon)))
                (categories . ,(when categories
                                 (split-string
                                  categories ";" nil "[[:space:]]")))
-               (generic-name . ,generic-name)
+               ,@(when generic-name `((generic-name . ,generic-name)))
                (terminal . ,(string= terminal "true"))
                (visible . ,(not (or (string= hidden "true")
                                     (string= no-display "true")))))
