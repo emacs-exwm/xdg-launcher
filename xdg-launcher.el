@@ -226,6 +226,8 @@ extension) to alists of:
      do (map-let (("Name" name) ("Type" type) ("TryExec" try-exec)
                   ("Exec" exec) ("Path" path) ("Comment" comment)
                   ("Icon" icon) ("Terminal" terminal)
+                  ("Categories" categories)
+                  ("GenericName" generic-name)
                   ("Hidden" hidden) ("NoDisplay" no-display))
             (xdg-desktop-read-file file)
           (when (and exec name
@@ -238,6 +240,10 @@ extension) to alists of:
                (exec . ,(xdg-launcher--parse-exec exec name icon file))
                (icon . ,(and iconpath icon
                              (xdg-launcher--get-icon iconpath icon)))
+               (categories . ,(when categories
+                                (split-string
+                                 categories ";" nil "[[:space:]]")))
+               (generic-name . ,generic-name)
                (terminal . ,(string= terminal "true"))
                (visible . ,(not (or (string= hidden "true")
                                     (string= no-display "true")))))
