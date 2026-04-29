@@ -70,6 +70,27 @@ which see."
           (function :tag "Custom")
           (const :tag "Disable terminal support" nil)))
 
+(defcustom xdg-launcher-default-directory nil
+  "The default directory in which to launch XDG applications.
+
+This option does not apply when the application's .desktop file specifies
+a default directory (via the Path key).
+
+When nil (the default), applications will be launched in the current
+`default-directory', or the user's home directory if the default directory
+doesn't exist or is remote.
+
+When a string, the application will be opened in the specified directory.
+
+When a function, the function will be called with an alist describing the
+application to be launched and the application will be opened in that
+directory. The function will be passed an alist specifying the application
+to be launched; see `xdg-launcher-parse-files' for the available alist fields."
+  :type '(choice
+          (const :tag "Current Directory" nil)
+          (string :tag "Specific Directory")
+          (function :tag "Dynamic Directory")))
+
 (defsubst xdg-launcher--managed-by-systemd ()
   "Return t when the current Emacs instance is managed by systemd."
   (equal (getenv-internal "SYSTEMD_EXEC_PID" initial-environment)
@@ -246,13 +267,24 @@ The return-value is cached and should not be modified by the caller."
             xdg-launcher--cached-files new-files)))
   xdg-launcher--cache)
 
+(defun xdg-launcher--default-directory (app)
+  "Return the appropriate default directory for APP."
+  (or (alist-get 'path app)
+      (pcase xdg-launcher-default-directory
+        ((pred stringp) xdg-launcher-default-directory)
+        ((pred functionp) (funcall xdg-launcher-default-directory app)))
+        (if (and (not (file-remote-p default-directory))
+                 (file-exists-p default-directory))
+            default-directory
+          (expand-file-name "~/"))))
+
 (defun xdg-launcher-action-function-uwsm (selected)
   "Function used to run the SELECTED application using UWSM."
   (let-alist selected
     (let ((cmd (car .exec))
           (args (cdr .exec))
           (id (file-name-base .file))
-          (default-directory (or .path default-directory)))
+          (default-directory (xdg-launcher--default-directory selected)))
       (with-existing-directory
         (make-process
          :name (concat "uwsm-" id)
@@ -272,7 +304,7 @@ The return-value is cached and should not be modified by the caller."
     (let ((cmd (car .exec))
           (args (cdr .exec))
           (id (file-name-base .file))
-          (default-directory (or .path default-directory)))
+          (default-directory (xdg-launcher--default-directory selected)))
       (with-existing-directory
         (if .terminal
             (progn
