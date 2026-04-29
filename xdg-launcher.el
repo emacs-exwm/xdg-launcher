@@ -256,16 +256,14 @@ The return-value is cached and should not be modified by the caller."
       (with-existing-directory
         (make-process
          :name (concat "uwsm-" id)
-         :command (seq-filter
-                   #'identity
-                   `("uwsm"
+         :command `("uwsm"
                      "app"
                      "-t" "service"
                      "-a" ,id
                      "-d" ,(or .comment (format "XDG Application: %s" id))
-                     ,(when .terminal "-T")
+                     ,@(when .terminal '("-T"))
                      "--"
-                     ,cmd ,@args)))))))
+                     ,cmd ,@args))))))
 
 
 (defun xdg-launcher-action-function-default (selected)
