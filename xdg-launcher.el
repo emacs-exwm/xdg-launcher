@@ -216,7 +216,7 @@ DESKTOP-FILE is the location of the desktop-file itself."
              ((or ?d ?D ?n ?N ?v ?m) nil)                ; Skip deprecated codes
              (_ (error "Invalid field code: %s" arg))))  ; Reject unrecognized field codes
        (list arg)))
-   (split-string-and-unquote exec-string)))
+   (split-string-shell-command (xdg-launcher--unescape-value exec-string))))
 
 (defun xdg-launcher--is-installed (tryexec)
   "Check if TRYEXEC file is installed in the \"exec-path\"."
