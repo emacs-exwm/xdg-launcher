@@ -194,7 +194,7 @@ DESKTOP-FILE is the location of the desktop-file itself."
              (?i (and icon-name `("--icon" ,icon-name))) ; Icon
              (?c (ensure-list app-name))                 ; Application name
              (?k (ensure-list desktop-file))             ; Desktop file location (skip)
-             (?% "%")                                    ; Literal %
+             (?% (list (substring arg 1)))               ; Escaped %
              ((or ?d ?D ?n ?N ?v ?m) nil)                ; Skip deprecated codes
              (_ (error "Invalid field code: %s" arg))))  ; Reject unrecognized field codes
        (list arg)))
