@@ -232,7 +232,12 @@ extension) to alists of:
             (xdg-desktop-read-file file)
           (when (and exec name
                      (string= type "Application")
-                     (xdg-launcher--is-installed try-exec))
+                     (xdg-launcher--is-installed try-exec)
+                     ;; Do not let a hidden entry replace a visible entry
+                     ;; with the same application name.
+                     (or (not (or (string= hidden "true")
+                                  (string= no-display "true")))
+                         (not (alist-get 'visible (gethash name hash)))))
             (puthash
              name
              `((name . ,name)
