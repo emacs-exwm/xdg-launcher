@@ -175,6 +175,24 @@ This function always returns its elements in a stable order."
                 (puthash id file hash)))))))
     result))
 
+(defun xdg-launcher--unescape-value (string)
+  "Undo the Desktop Entry Specification's general escaping of STRING."
+  (let ((string-length (length string)) (idx 0) amended-string)
+    (while (< idx string-length)
+      (let ((chr (aref string idx)))
+        (if (and (eq chr ?\\) (< (1+ idx) string-length))
+            (let ((next-char (aref string (1+ idx))))
+              (pcase next-char
+                (?\\ (push ?\\ amended-string) (setq idx (+ idx 2)))
+                (?s (push ?\s amended-string) (setq idx (+ idx 2)))
+                (?n (push ?\n amended-string) (setq idx (+ idx 2)))
+                (?t (push ?\t amended-string) (setq idx (+ idx 2)))
+                (?r (push ?\r amended-string) (setq idx (+ idx 2)))
+                (_ (push chr amended-string) (setq idx (1+ idx)))))
+          (push chr amended-string)
+          (setq idx (1+ idx)))))
+    (concat (nreverse amended-string))))
+
 (defun xdg-launcher--parse-exec (exec-string app-name icon-name desktop-file)
   "Parse a .desktop Exec key string, returning a list of command arguments.
 EXEC-STRING is the Exec key from the desktop entry.
@@ -198,7 +216,7 @@ DESKTOP-FILE is the location of the desktop-file itself."
              ((or ?d ?D ?n ?N ?v ?m) nil)                ; Skip deprecated codes
              (_ (error "Invalid field code: %s" arg))))  ; Reject unrecognized field codes
        (list arg)))
-   (split-string-and-unquote exec-string)))
+   (split-string-shell-command (xdg-launcher--unescape-value exec-string))))
 
 (defun xdg-launcher--is-installed (tryexec)
   "Check if TRYEXEC file is installed in the \"exec-path\"."
