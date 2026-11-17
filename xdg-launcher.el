@@ -230,26 +230,31 @@ extension) to alists of:
                   ("GenericName" generic-name)
                   ("Hidden" hidden) ("NoDisplay" no-display))
             (xdg-desktop-read-file file)
-          (when (and exec name
-                     (string= type "Application")
-                     (xdg-launcher--is-installed try-exec))
-            (puthash
-             name
-             `((name . ,name)
-               ,@(when comment `((comment . ,comment)))
-               ,@(when path `((path . ,path)))
-               (file . ,file)
-               (exec . ,(xdg-launcher--parse-exec exec name icon file))
-               (icon . ,(and iconpath icon
-                             (xdg-launcher--get-icon iconpath icon)))
-               (categories . ,(when categories
-                                (split-string
-                                 categories ";" nil "[[:space:]]")))
-               ,@(when generic-name `((generic-name . ,generic-name)))
-               (terminal . ,(string= terminal "true"))
-               (visible . ,(not (or (string= hidden "true")
-                                    (string= no-display "true")))))
-             hash)))
+          (let ((visible (not (or (string= hidden "true")
+                                  (string= no-display "true")))))
+            (when (and exec name
+                       (string= type "Application")
+                       (xdg-launcher--is-installed try-exec)
+                       ;; Do not let a hidden entry replace a visible entry with
+                       ;; the same application name.
+                       (or visible
+                           (not (alist-get 'visible (gethash name hash)))))
+              (puthash
+               name
+               `((name . ,name)
+                 ,@(when comment `((comment . ,comment)))
+                 ,@(when path `((path . ,path)))
+                 (file . ,file)
+                 (exec . ,(xdg-launcher--parse-exec exec name icon file))
+                 (icon . ,(and iconpath icon
+                               (xdg-launcher--get-icon iconpath icon)))
+                 (categories . ,(when categories
+                                  (split-string
+                                   categories ";" nil "[[:space:]]")))
+                 ,@(when generic-name `((generic-name . ,generic-name)))
+                 (terminal . ,(string= terminal "true"))
+                 (visible . ,visible))
+               hash))))
      finally return hash)))
 
 ;;;###autoload
